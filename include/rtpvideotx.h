@@ -23,14 +23,23 @@ typedef enum{
     RtpVideoTx_Format_RGBA_16bit,         // Pixelgroup: 1 pixel  in 8  bytes
     RtpVideoTx_Format_BGR_16bit,          // Pixelgroup: 1 pixel  in 6  bytes
     RtpVideoTx_Format_BGRA_16bit,         // Pixelgroup: 1 pixel  in 8  bytes
+    RtpVideoTx_Format_RGBp_5bit,          // Pixelgroup: 1 pixel  in 3  bytes (RFC4421)
+    RtpVideoTx_Format_RGpB_5bit,          // Pixelgroup: 1 pixel  in 3  bytes (RFC4421)
+    RtpVideoTx_Format_RpGB_5bit,          // Pixelgroup: 1 pixel  in 3  bytes (RFC4421)
+    RtpVideoTx_Format_BGRp_5bit,          // Pixelgroup: 1 pixel  in 3  bytes (RFC4421)
+    RtpVideoTx_Format_BGpR_5bit,          // Pixelgroup: 1 pixel  in 3  bytes (RFC4421)
+    RtpVideoTx_Format_BpGR_5bit,          // Pixelgroup: 1 pixel  in 3  bytes (RFC4421)
 }RtpVideoTx_Format;
 
-RtpVideoTx_t RtpVideoTx_new(const RtpVideoTx_Format format);
+RtpVideoTx_t RtpVideoTx_new(int sock, const RtpVideoTx_Format format);
 int RtpVideoTx_release( RtpVideoTx_t v );
 
 int RtpVideoTx_addDestination( RtpVideoTx_t v, const char* host, unsigned int port );
 int RtpVideoTx_removeDestination( RtpVideoTx_t v, const char* host, unsigned int port );
 int RtpVideoTx_setMTU( RtpVideoTx_t v, const unsigned int mtu );
+int RtpVideoTx_setPayloadFormat( RtpVideoTx_t v, const uint8_t payloadFormat );
+int RtpVideoTx_setSSRC( RtpVideoTx_t v, const uint32_t ssrc );
+int RtpVideoTx_beginFrame( RtpVideoTx_t v, const uint32_t timestamp );
 int RtpVideoTx_getLineBuffer( RtpVideoTx_t v, const unsigned int length, uint8_t** out_buffer );
 int RtpVideoTx_addLine( RtpVideoTx_t v, const unsigned int lineNo, const unsigned int pixelOffset, const uint32_t length, uint8_t* buffer, unsigned long flags );
 int RtpVideoTx_flush( RtpVideoTx_t v );
