@@ -18,6 +18,6 @@ endif()
 add_subdirectory(testvideosend)
 #add_executable(ClangUML src/main.c)
 #target_link_libraries(ClangUML LINK_PUBLIC LibClangUML)
-add_library(rtpvideo src/rtpvideotx.c)
+add_library(rtpvideo SHARED src/rtpvideotx.c)
 target_include_directories(rtpvideo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

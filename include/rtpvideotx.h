@@ -37,6 +37,7 @@ int RtpVideoTx_release( RtpVideoTx_t v );
 int RtpVideoTx_addDestination( RtpVideoTx_t v, const char* host, unsigned int port );
 int RtpVideoTx_removeDestination( RtpVideoTx_t v, const char* host, unsigned int port );
 int RtpVideoTx_setMTU( RtpVideoTx_t v, const unsigned int mtu );
+int RtpVideoTx_getVideoFormat( RtpVideoTx_t v, RtpVideoTx_Format* out_format );
 int RtpVideoTx_setPayloadFormat( RtpVideoTx_t v, const uint8_t payloadFormat );
 int RtpVideoTx_setSSRC( RtpVideoTx_t v, const uint32_t ssrc );
 int RtpVideoTx_beginFrame( RtpVideoTx_t v, const uint32_t timestamp );

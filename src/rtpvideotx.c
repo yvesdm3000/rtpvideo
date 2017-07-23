@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 
 #ifdef __GNUC__
   #ifndef likely
@@ -113,6 +114,8 @@ int RtpVideoTx_addDestination( RtpVideoTx_t v, const char* host, unsigned int po
     RtpVideoTx* self = (RtpVideoTx*)v;
     if (unlikely(!self))
         return -1;
+    if (unlikely(!host))
+        return -1;
     if (inet_aton(host , &self->destination.sin_addr) == 0)
     {
         return -1;
@@ -147,6 +150,18 @@ int RtpVideoTx_setMTU( RtpVideoTx_t v, const unsigned int mtu )
     if (unlikely(!self))
         return -1;
     self->mtu = mtu;
+
+    return 0;
+}
+
+int RtpVideoTx_getVideoFormat( RtpVideoTx_t v, RtpVideoTx_Format* out_format )
+{
+    RtpVideoTx* self = (RtpVideoTx*)v;
+    if (unlikely(!self))
+        return -1;
+
+    *out_format = self->format;
+
     return 0;
 }
 
@@ -155,7 +170,9 @@ int RtpVideoTx_setPayloadFormat( RtpVideoTx_t v, const uint8_t payloadFormat )
     RtpVideoTx* self = (RtpVideoTx*)v;
     if (unlikely(!self))
         return -1;
+
     self->header[1] = payloadFormat&0x7f;
+
     return 0;
 }
 
@@ -164,10 +181,12 @@ int RtpVideoTx_setSSRC( RtpVideoTx_t v, const uint32_t ssrc )
     RtpVideoTx* self = (RtpVideoTx*)v;
     if (unlikely(!self))
         return -1;
+
     self->header[8] = (ssrc>>24)&0xff;
     self->header[9] = (ssrc>>16)&0xff;
     self->header[10] = (ssrc>>8)&0xff;
     self->header[11] = (ssrc>>0)&0xff;
+
     return 0;
 }
 
@@ -177,8 +196,10 @@ int RtpVideoTx_beginFrame( RtpVideoTx_t v, const uint32_t timestamp )
     RtpVideoTx* self = (RtpVideoTx*)v;
     if (unlikely(!self))
         return -1;
+
     self->timestamp = timestamp;
     RtpVideoTx_flush( v );
+
     return 0;
 }
 
@@ -198,6 +219,7 @@ int RtpVideoTx_getLineBuffer( RtpVideoTx_t v, const unsigned int length, uint8_t
     }
     else if (self->bufferSize - self->bufferOffset < length)
     {
+        fprintf(stderr,"Resizing buffer to %d\n", length + self->bufferOffset);
         uint8_t* newBuffer = realloc(self->buffer, length + self->bufferOffset);
         if (newBuffer == NULL)
             return -1;
@@ -205,6 +227,7 @@ int RtpVideoTx_getLineBuffer( RtpVideoTx_t v, const unsigned int length, uint8_t
         self->bufferSize = length + self->bufferOffset;
     }
     *out_buffer = self->buffer;
+
     return 0;
 }
 
@@ -213,6 +236,7 @@ int RtpVideoTx_addLine( RtpVideoTx_t v, unsigned int lineNo, unsigned int pixelO
     RtpVideoTx* self = (RtpVideoTx*)v;
     if (unlikely(!self))
         return -1;
+
     struct msghdr msg;
     struct iovec  iov[2];
     const unsigned int pgroupSize = _RtpVideoTxFormatPixelGroupMap[self->format].byteCount;
@@ -272,9 +296,13 @@ int RtpVideoTx_addLine( RtpVideoTx_t v, unsigned int lineNo, unsigned int pixelO
         ++self->seqno;
         pixelOffset += (payloadSize/pgroupSize)*pgroupPixelCount;
         buffer += payloadSize;
+        self->bufferOffset += payloadSize;
     }
-    if (flags&0x01 == 0x01) // End of frame/field
+    if (flags&0x01 == 0x01) { // End of frame/field
          self->header[1] &= 0x7f; // Reset Marker bit
+         self->bufferOffset = 0;
+    }
+    self->bufferOffset = 0;
 
     return 0;
 }
@@ -284,6 +312,7 @@ int RtpVideoTx_flush( RtpVideoTx_t v )
     RtpVideoTx* self = (RtpVideoTx*)v;
     if (unlikely(!self))
         return -1;
+
     return 0;
 }
 
